@@ -1,4 +1,5 @@
-﻿using GitIssuer.Core.Services.Bases.Interfaces;
+﻿using GitIssuer.Core.Dto.Responses;
+using GitIssuer.Core.Services.Bases.Interfaces;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -7,16 +8,16 @@ namespace GitIssuer.Core.Services.Bases;
 
 public abstract class GitServiceBase(IHttpClientFactory httpClientFactory) : IGitService
 {
-    public async Task<string> AddIssue(string owner, string repo, string title, string body = null)
+    public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string name, string description)
     {
         var httpClient = httpClientFactory.CreateClient();
-        var personalAccessToken = "xx";
-        var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/issues";
+        const string personalAccessToken = "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";
+        var apiUrl = $"https://api.github.com/repos/{repositoryOwner}/{repositoryName}/issues";
 
         var requestBody = new
         {
-            title = title,
-            body = body
+            title = name,
+            body = description
         };
 
         var jsonRequestBody = JsonSerializer.Serialize(requestBody);
@@ -34,7 +35,10 @@ public abstract class GitServiceBase(IHttpClientFactory httpClientFactory) : IGi
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                return responseContent;
+                var responseData = JsonSerializer.Deserialize<AddIssueResponseDto>(responseContent);
+
+                // TODO: Is it possible to be null? Investigate GitHub API documentation
+                return responseData!.HtmlUrl!;
             }
 
             var errorContent = await response.Content.ReadAsStringAsync();
