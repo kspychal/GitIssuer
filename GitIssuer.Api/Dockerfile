@@ -12,19 +12,19 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GitIssuer.GitApi/GitIssuer.GitApi.csproj", "GitIssuer.GitApi/"]
-RUN dotnet restore "./GitIssuer.GitApi/GitIssuer.GitApi.csproj"
+COPY ["GitIssuer.Api/GitIssuer.Api.csproj", "GitIssuer.Api/"]
+RUN dotnet restore "./GitIssuer.Api/GitIssuer.Api.csproj"
 COPY . .
-WORKDIR "/src/GitIssuer.GitApi"
-RUN dotnet build "./GitIssuer.GitApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/GitIssuer.Api"
+RUN dotnet build "./GitIssuer.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./GitIssuer.GitApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./GitIssuer.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GitIssuer.GitApi.dll"]
+ENTRYPOINT ["dotnet", "GitIssuer.Api.dll"]
