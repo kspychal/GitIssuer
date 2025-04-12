@@ -41,7 +41,45 @@ public class IssueController(IGitServiceFactory gitServiceFactory) : ControllerB
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException)
         {
-            return ServiceUnavailableResponse($"Failed to create GitHub issue. ({exception.Message})");
+            return ServiceUnavailableResponse($"Failed to create issue. ({exception.Message})");
+        }
+        catch (Exception exception)
+        {
+            return InternalServerErrorResponse($"An unexpected error occurred while adding the issue. ({exception.Message})");
+        }
+    }
+
+    [HttpPatch("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/modify")]
+    public async Task<IActionResult> ModifyIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId, [FromBody] ModifyIssueRequestDto issue)
+    {
+        IGitService? gitService;
+        try
+        {
+            gitService = gitServiceFactory.GetService(gitProviderName);
+        }
+        catch (NotSupportedException)
+        {
+            var validGitProviderNames = string.Join(", ", gitServiceFactory.GetValidGitProviderNames());
+            return BadRequestResponse($"Provided GIT provider name ({gitProviderName}) is not supported. Valid platforms: {validGitProviderNames}.");
+        }
+        catch (Exception)
+        {
+            return InternalServerErrorResponse($"An unexpected error occurred while creating GitService for gitProviderName {gitProviderName}.");
+        }
+
+        if (gitService == null)
+        {
+            return InternalServerErrorResponse($"Failed to create {gitProviderName}Service object.");
+        }
+
+        try
+        {
+            var result = await gitService.ModifyIssueAsync(repositoryOwner, repositoryName, issueId, issue.Title, issue.Description);
+            return CreatedResponse(result);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException)
+        {
+            return ServiceUnavailableResponse($"Failed to create issue. ({exception.Message})");
         }
         catch (Exception exception)
         {
