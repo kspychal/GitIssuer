@@ -3,41 +3,42 @@ using GitIssuer.Core.Services.Bases;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
+using System.Web;
 
 namespace GitIssuer.Core.Services;
 
-public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBase(httpClientFactory)
+public class GitLabService(IHttpClientFactory httpClientFactory) : GitServiceBase(httpClientFactory)
 {
     public override async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string name, string description)
     {
-        var httpClient = httpClientFactory.CreateClient();
-        const string personalAccessToken = "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";
-        var apiUrl = $"https://api.github.com/repos/{repositoryOwner}/{repositoryName}/issues";
+        const string personalAccessToken = "glpat-KGKv13Qz5juRXGf6vyos";
+        const string apiUrl = "https://gitlab.com/api/v4/";
 
+        var httpClient = httpClientFactory.CreateClient();
+        
+        httpClient.BaseAddress = new Uri(apiUrl);
         var requestBody = new
         {
             title = name,
-            body = description
+            description = description
         };
 
         var jsonRequestBody = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json");
 
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", personalAccessToken);
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
-        httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("GitIssuer");
-        httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 
         try
         {
-            var response = await httpClient.PostAsync(apiUrl, content);
+            var url = $"projects/{Uri.EscapeDataString($"{repositoryOwner}/{repositoryName}")}/issues";
+            var response = await httpClient.PostAsync(url, content);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var responseData = JsonSerializer.Deserialize<AddIssueResponseDto>(responseContent);
+                var responseData = JsonSerializer.Deserialize<GitLabAddIssueResponseDto>(responseContent);
 
-                return responseData!.HtmlUrl!;
+                return responseData!.WebUrl!;
             }
 
             var errorContent = await response.Content.ReadAsStringAsync();
@@ -45,7 +46,7 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
         }
         catch (HttpRequestException exception)
         {
-            throw new HttpRequestException($"An error occurred while communicating with GitHub ({exception.Message}).");
+            throw new HttpRequestException($"An error occurred while communicating with GitLab ({exception.Message}).");
         }
         catch (JsonException exception)
         {

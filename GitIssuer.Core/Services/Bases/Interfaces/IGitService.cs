@@ -2,5 +2,5 @@
 
 public interface IGitService
 {
-    public Task<string> AddIssueAsync(string owner, string repo, string title, string body = null);
+    public Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string name, string description);
 }

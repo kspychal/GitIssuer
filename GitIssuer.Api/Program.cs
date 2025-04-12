@@ -17,7 +17,8 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddScoped<IGitServiceFactory, GitServiceFactory>();
-        builder.Services.AddScoped<GitHubService>(); 
+        builder.Services.AddScoped<GitHubService>();
+        builder.Services.AddScoped<GitLabService>();
         builder.Services.AddHttpClient();
 
         var app = builder.Build();
