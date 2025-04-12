@@ -37,7 +37,6 @@ public abstract class GitServiceBase(IHttpClientFactory httpClientFactory) : IGi
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var responseData = JsonSerializer.Deserialize<AddIssueResponseDto>(responseContent);
 
-                // TODO: Is it possible to be null? Investigate GitHub API documentation
                 return responseData!.HtmlUrl!;
             }
 

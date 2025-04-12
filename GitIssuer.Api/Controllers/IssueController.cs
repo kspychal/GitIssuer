@@ -49,18 +49,22 @@ public class IssueController(IGitServiceFactory gitServiceFactory) : ControllerB
         }
     }
 
+    #region Responses
+
     protected IActionResult CreatedResponse(string message)
-        => StatusCode(200, new ApiResponse { Success = true, Url = message });
+        => StatusCode(200, new ApiResponseBody { Success = true, Url = message });
 
     protected IActionResult BadRequestResponse(string message)
         => StatusCode(500, ErrorApiResponse(message));
 
-    protected IActionResult InternalServerErrorResponse(string message) 
+    protected IActionResult InternalServerErrorResponse(string message)
         => StatusCode(500, ErrorApiResponse(message));
 
-    protected IActionResult ServiceUnavailableResponse(string message)  
+    protected IActionResult ServiceUnavailableResponse(string message)
         => StatusCode(503, ErrorApiResponse(message));
 
-    private static ApiResponse ErrorApiResponse(string message)
+    private static ApiResponseBody ErrorApiResponse(string message)
         => new() { Success = false, Error = message };
+
+    #endregion
 }

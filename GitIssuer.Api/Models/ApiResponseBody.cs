@@ -2,7 +2,7 @@
 
 namespace GitIssuer.Api.Models;
 
-public record ApiResponse
+public record ApiResponseBody
 {
     public bool Success { get; set; }
 
