@@ -10,10 +10,12 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
 {
     public override async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string name, string description)
     {
-        var httpClient = httpClientFactory.CreateClient();
         const string personalAccessToken = "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";
-        var apiUrl = $"https://api.github.com/repos/{repositoryOwner}/{repositoryName}/issues";
+        const string apiUrl = "https://api.github.com/";
 
+        var httpClient = httpClientFactory.CreateClient();
+
+        httpClient.BaseAddress = new Uri(apiUrl);
         var requestBody = new
         {
             title = name,
@@ -30,12 +32,13 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
 
         try
         {
-            var response = await httpClient.PostAsync(apiUrl, content);
+            var url = $"repos/{repositoryOwner}/{repositoryName}/issues";
+            var response = await httpClient.PostAsync(url, content);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var responseData = JsonSerializer.Deserialize<AddIssueResponseDto>(responseContent);
+                var responseData = JsonSerializer.Deserialize<GitHubAddIssueResponseDto>(responseContent);
 
                 return responseData!.HtmlUrl!;
             }
