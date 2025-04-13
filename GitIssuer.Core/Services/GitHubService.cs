@@ -6,43 +6,50 @@ namespace GitIssuer.Core.Services;
 
 public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBase<GitHubResponseDto>(httpClientFactory)
 {
-    public override string PersonalAccessToken => "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";
-    public override string ApiUrl => "https://api.github.com/";
-    public override string ProviderName => "GitHub";
+    protected override string PersonalAccessToken => "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";
+    protected override string ApiUrl => "https://api.github.com/";
+    protected override string ProviderName => "GitHub";
 
-    public override object CreateAddIssueRequestBody(string name, string description)
+    /// <inheritdoc/>
+    protected override object CreateAddIssueRequestBody(string name, string description)
         => new
         {
             title = name,
             body = description
         };
 
-    public override object CreateModifyIssueRequestBody(string? name, string? description)
+    /// <inheritdoc/>
+    protected override object CreateModifyIssueRequestBody(string? name, string? description)
         => new
         {
             title = name,
             body = description
         };
 
-    public override object CreateCloseIssueRequestBody()
+    /// <inheritdoc/>
+    protected override object CreateCloseIssueRequestBody()
         => new
         {
             state = "closed"
         };
 
-    public override void AddCustomRequestHeaders(HttpClient httpClient)
+    /// <inheritdoc/>
+    protected override void AddCustomRequestHeaders(HttpClient httpClient)
     {
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("GitIssuer");
         httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
     }
 
-    public override HttpMethod GetModifyIssueHttpMethod()
+    /// <inheritdoc/>
+    protected override HttpMethod GetModifyIssueHttpMethod()
         => HttpMethod.Patch;
 
-    public override string GetIssuesUrl(string repositoryOwner, string repositoryName)
+    /// <inheritdoc/>
+    protected override string GetIssuesUrl(string repositoryOwner, string repositoryName)
         => $"repos/{repositoryOwner}/{repositoryName}/issues";
 
+    /// <inheritdoc/>
     protected override string ExtractUrl(GitHubResponseDto response)
         => response.HtmlUrl!;
 }

@@ -13,25 +13,56 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
 {
     protected readonly ILogger<IssueController> Logger = logger;
 
+    /// <summary>
+    /// Adds a new issue to the specified repository on the given Git provider.
+    /// </summary>
+    /// <param name="gitProviderName">The name of the Git provider (e.g., GitHub, GitLab).</param>
+    /// <param name="repositoryOwner">The owner of the repository.</param>
+    /// <param name="repositoryName">The name of the repository.</param>
+    /// <param name="issue">The issue data including title and description.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
     [HttpPost("{gitProviderName}/{repositoryOwner}/{repositoryName}/add")]
     public Task<IActionResult> AddIssue(string gitProviderName, string repositoryOwner, string repositoryName, [FromBody] AddIssueRequestDto issue) 
         => ExecuteGitServiceActionAsync(gitProviderName,
             gitService => gitService.AddIssueAsync(repositoryOwner, repositoryName, issue.Title, issue.Description), 
             CreatedResponse);
-    
 
+    /// <summary>
+    /// Modifies an existing issue in the specified repository on the given Git provider.
+    /// </summary>
+    /// <param name="gitProviderName">The name of the Git provider (e.g., GitHub, GitLab).</param>
+    /// <param name="repositoryOwner">The owner of the repository.</param>
+    /// <param name="repositoryName">The name of the repository.</param>
+    /// <param name="issueId">The ID of the issue to be modified.</param>
+    /// <param name="issue">The updated issue data including title and description.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
     [HttpPut("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/modify")]
     public Task<IActionResult> ModifyIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId, [FromBody] ModifyIssueRequestDto issue) 
         => ExecuteGitServiceActionAsync(gitProviderName, 
             gitService => gitService.ModifyIssueAsync(repositoryOwner, repositoryName, issueId, issue.Title, issue.Description), 
             OkResponse);
 
+    /// <summary>
+    /// Closes an existing issue in the specified repository on the given Git provider.
+    /// </summary>
+    /// <param name="gitProviderName">The name of the Git provider (e.g., GitHub, GitLab).</param>
+    /// <param name="repositoryOwner">The owner of the repository.</param>
+    /// <param name="repositoryName">The name of the repository.</param>
+    /// <param name="issueId">The ID of the issue to be closed.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
     [HttpPatch("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/close")]
     public Task<IActionResult> CloseIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId)
         => ExecuteGitServiceActionAsync(gitProviderName,
             gitService => gitService.CloseIssueAsync(repositoryOwner, repositoryName, issueId),
             OkResponse);
 
+    /// <summary>
+    /// Executes a Git service action with appropriate error handling and logging.
+    /// </summary>
+    /// <param name="gitProviderName">The name of the Git provider.</param>
+    /// <param name="gitServiceAction">The method that executes the Git service action.</param>
+    /// <param name="createSuccessResponseAction">A method to generate a success response.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     private async Task<IActionResult> ExecuteGitServiceActionAsync(string gitProviderName, Func<IGitService, Task<string>> gitServiceAction, Func<string, IActionResult> createSuccessResponseAction)
     {
         var (gitService, actionResult) = TryGetGitService(gitProviderName);
@@ -59,6 +90,11 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
         }
     }
 
+    /// <summary>
+    /// Attempts to retrieve an <see cref="IGitService"/> instance for the specified Git provider name.
+    /// </summary>
+    /// <param name="gitProviderName">The name of the Git provider.</param>
+    /// <returns>A tuple containing either the <see cref="IGitService"/> instance or an <see cref="IActionResult"/> in case of failure.</returns>
     private (IGitService? Service, IActionResult? Result) TryGetGitService(string gitProviderName)
     {
         try

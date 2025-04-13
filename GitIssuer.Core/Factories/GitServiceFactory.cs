@@ -12,6 +12,7 @@ public class GitServiceFactory(IServiceProvider serviceProvider) : IGitServiceFa
 
     private static readonly string[] ValidGitProviderNames = [GitHub, GitLab];
 
+    /// <inheritdoc/>
     public IGitService? GetService(string gitProviderName)
         => gitProviderName.ToLower() switch
         {
@@ -20,5 +21,6 @@ public class GitServiceFactory(IServiceProvider serviceProvider) : IGitServiceFa
             _ => throw new NotSupportedException($"Provider '{gitProviderName}' is not supported.")
         };
 
+    /// <inheritdoc/>
     public IEnumerable<string> GetValidGitProviderNames() => ValidGitProviderNames;
 }

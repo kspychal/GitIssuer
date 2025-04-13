@@ -8,10 +8,11 @@ namespace GitIssuer.Core.Services.Bases;
 
 public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFactory) : IGitService
 {
-    public abstract string PersonalAccessToken { get; }
-    public abstract string ApiUrl { get; }
-    public abstract string ProviderName { get; }
+    protected abstract string PersonalAccessToken { get; }
+    protected abstract string ApiUrl { get; }
+    protected abstract string ProviderName { get; }
 
+    /// <inheritdoc/>
     public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string name, string description)
     {
         var requestBody = CreateAddIssueRequestBody(name, description);
@@ -19,6 +20,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
         return await SendIssueRequestAsync(issuesUrl, requestBody, HttpMethod.Post);
     }
 
+    /// <inheritdoc/>
     public async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? name, string? description)
     {
         var requestBody = CreateModifyIssueRequestBody(name, description);
@@ -27,6 +29,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
     }
 
+    /// <inheritdoc/>
     public async Task<string> CloseIssueAsync(string repositoryOwner, string repositoryName, int issueId)
     {
         var requestBody = CreateCloseIssueRequestBody();
@@ -35,6 +38,14 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
     }
 
+    /// <summary>
+    /// Sends the HTTP request to interact with the issue (create, modify, or close).
+    /// </summary>
+    /// <param name="url">The URL for the issue endpoint.</param>
+    /// <param name="requestBody">The body of the request, containing the issue details.</param>
+    /// <param name="method">The HTTP method (POST, PUT, or PATCH) to use for the request.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the URL of the affected issue.</returns>
+    /// <exception cref="GitException">Thrown when the response is not successful.</exception>
     private async Task<string> SendIssueRequestAsync(string url, object requestBody, HttpMethod method)
     {
         var httpClient = httpClientFactory.CreateClient();
@@ -65,14 +76,51 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
         throw new GitException($"{ProviderName} API responded with a non-success status code.", errorContent);
     }
 
-    public abstract object CreateAddIssueRequestBody(string name, string description);
-    public abstract object CreateModifyIssueRequestBody(string? name, string? description);
-    public abstract object CreateCloseIssueRequestBody();
+    /// <summary>
+    /// Creates the request body for adding a new issue on the Git platform.
+    /// </summary>
+    /// <param name="name">The title of the issue.</param>
+    /// <param name="description">The description of the issue.</param>
+    /// <returns>A JSON-serializable object containing the issue title and body.</returns>
+    protected abstract object CreateAddIssueRequestBody(string name, string description);
 
-    public abstract void AddCustomRequestHeaders(HttpClient httpClient);
+    /// <summary>
+    /// Creates the request body for modifying an existing issue on the Git platform.
+    /// </summary>
+    /// <param name="name">The new title of the issue</param>
+    /// <param name="description">The new description of the issue</param>
+    /// <returns>An JSON-serializable object containing the updated issue title and body.</returns>
+    protected abstract object CreateModifyIssueRequestBody(string? name, string? description);
 
-    public abstract HttpMethod GetModifyIssueHttpMethod();
+    /// <summary>
+    /// Creates the request body to close an issue on the Git platform.
+    /// </summary>
+    /// <returns>An anonymous object indicating that the issue should be closed.</returns>
+    protected abstract object CreateCloseIssueRequestBody();
 
-    public abstract string GetIssuesUrl(string repositoryOwner, string repositoryName);
+    /// <summary>
+    /// Adds custom headers to the HTTP client.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to which headers will be added.</param>
+    protected abstract void AddCustomRequestHeaders(HttpClient httpClient);
+
+    /// <summary>
+    /// Gets the HTTP method used for modifying an issue.
+    /// </summary>
+    protected abstract HttpMethod GetModifyIssueHttpMethod();
+
+    /// <summary>
+    /// Constructs the relative URL for accessing issues in a specific Git repository.
+    /// </summary>
+    /// <param name="repositoryOwner">The owner of the repository.</param>
+    /// <param name="repositoryName">The name of the repository.</param>
+    /// <returns>The relative URL to the issues endpoint.</returns>
+    protected abstract string GetIssuesUrl(string repositoryOwner, string repositoryName);
+
+    /// <summary>
+    /// Extracts the issue URL from the specific Git API response.
+    /// </summary>
+    /// <param name="response">The deserialized response.</param>
+    /// <returns>The HTML URL of the affected issue.</returns>
     protected abstract string ExtractUrl(TResponse response);
 }
