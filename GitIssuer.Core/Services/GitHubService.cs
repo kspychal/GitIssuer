@@ -31,9 +31,9 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
         httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
     }
 
-    public override async Task<HttpResponseMessage> SendIssueUpdateRequestAsync(HttpClient httpClient, string issueUrl, StringContent content) 
-        => await httpClient.PatchAsync(issueUrl, content);
-    
+    public override HttpMethod GetModifyIssueHttpMethod()
+        => HttpMethod.Patch;
+
     public override string GetIssuesUrl(string repositoryOwner, string repositoryName)
         => $"repos/{repositoryOwner}/{repositoryName}/issues";
 

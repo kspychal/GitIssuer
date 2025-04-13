@@ -25,8 +25,8 @@ public class GitLabService(IHttpClientFactory httpClientFactory) : GitServiceBas
 
     public override void AddCustomRequestHeaders(HttpClient httpClient) { }
 
-    public override async Task<HttpResponseMessage> SendIssueUpdateRequestAsync(HttpClient httpClient, string issueUrl, StringContent content)
-        => await httpClient.PutAsync(issueUrl, content);
+    public override HttpMethod GetModifyIssueHttpMethod()
+        => HttpMethod.Put;
 
     public override string GetIssuesUrl(string repositoryOwner, string repositoryName) 
         => $"projects/{Uri.EscapeDataString($"{repositoryOwner}/{repositoryName}")}/issues";
