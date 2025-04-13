@@ -133,7 +133,7 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
         => StatusCode(201, new SuccessApiResponseBody(url));
 
     protected IActionResult BadRequestResponse(string error, string? details = null)
-        => StatusCode(500, new ErrorApiResponseBody(error, details));
+        => StatusCode(400, new ErrorApiResponseBody(error, details));
 
     protected IActionResult InternalServerErrorResponse(string error, string? details = null)
         => StatusCode(500, new ErrorApiResponseBody(error, details));
