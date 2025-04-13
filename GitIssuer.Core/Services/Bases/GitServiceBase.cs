@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GitIssuer.Core.Exceptions;
 
 namespace GitIssuer.Core.Services.Bases;
 
@@ -63,7 +64,15 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
             }
 
             var errorContent = await response.Content.ReadAsStringAsync();
-            throw new HttpRequestException(errorContent);
+            throw new GitException($"{ProviderName} API responded with a non-success status code. Response content: {errorContent}");
+        }
+        catch (GitException)
+        {
+            throw;
+        }
+        catch (ArgumentException)
+        {
+            throw;
         }
         catch (HttpRequestException exception)
         {
