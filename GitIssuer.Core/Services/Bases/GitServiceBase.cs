@@ -46,46 +46,23 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", PersonalAccessToken);
         AddCustomRequestHeaders(httpClient);
 
-        try
+        var response = method.Method switch
         {
-            var response = method.Method switch
-            {
-                "POST" => await httpClient.PostAsync(url, content),
-                "PATCH" => await httpClient.PatchAsync(url, content),
-                "PUT" => await httpClient.PutAsync(url, content),
-                _ => throw new ArgumentException("Invalid HttpMethod. Only Post, Patch, and Put are supported.")
-            };
+            "POST" => await httpClient.PostAsync(url, content),
+            "PATCH" => await httpClient.PatchAsync(url, content),
+            "PUT" => await httpClient.PutAsync(url, content),
+            _ => throw new ArgumentException("Invalid HttpMethod. Only Post, Patch, and Put are supported.")
+        };
 
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var responseData = JsonSerializer.Deserialize<TResponse>(responseContent);
-                return ExtractUrl(responseData!);
-            }
+        if (response.IsSuccessStatusCode)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseData = JsonSerializer.Deserialize<TResponse>(responseContent);
+            return ExtractUrl(responseData!);
+        }
 
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new GitException($"{ProviderName} API responded with a non-success status code. Response content: {errorContent}");
-        }
-        catch (GitException)
-        {
-            throw;
-        }
-        catch (ArgumentException)
-        {
-            throw;
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new HttpRequestException($"An error occurred while communicating with {ProviderName} ({exception.Message}).");
-        }
-        catch (JsonException exception)
-        {
-            throw new JsonException($"An error occurred while processing JSON data ({exception.Message}).");
-        }
-        catch (Exception exception)
-        {
-            throw new Exception($"An unexpected error occurred ({exception.Message}).");
-        }
+        var errorContent = await response.Content.ReadAsStringAsync();
+        throw new GitException($"{ProviderName} API responded with a non-success status code.", errorContent);
     }
 
     public abstract object CreateAddIssueRequestBody(string name, string description);

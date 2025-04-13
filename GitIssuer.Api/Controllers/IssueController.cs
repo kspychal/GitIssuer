@@ -1,10 +1,9 @@
 ﻿using GitIssuer.Api.Models;
 using GitIssuer.Core.Dto.Requests;
+using GitIssuer.Core.Exceptions;
 using GitIssuer.Core.Factories.Interfaces;
 using GitIssuer.Core.Services.Bases.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using GitIssuer.Core.Exceptions;
 
 namespace GitIssuer.Api.Controllers;
 
@@ -46,22 +45,17 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
             Logger.LogInformation(message);
             return createSuccessResponseAction(issueUrl);
         }
-        catch (Exception exception) when (exception is GitException)
+        catch (GitException exception)
         {
             Logger.LogInformation(exception.Message);
-            return ServiceUnavailableResponse(exception.Message);
-        }
-        catch (Exception exception) when (exception is ArgumentException or HttpRequestException or JsonException or ArgumentException)
-        {
-            var message = $"Failed to process issue. ({exception.Message})";
-            Logger.LogError(message);
-            return ServiceUnavailableResponse(message);
+            return ServiceUnavailableResponse(exception.Message, exception.InnerMessage);
         }
         catch (Exception exception)
         {
-            var message = $"An unexpected error occurred. ({exception.Message})";
-            Logger.LogCritical(message);
-            return InternalServerErrorResponse(message);
+            const string error = "An unexpected error occurred.";
+            var details = exception.Message;
+            Logger.LogCritical("{Error} {Details}", error, details);
+            return InternalServerErrorResponse(error, details);
         }
     }
 
@@ -79,40 +73,37 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
         catch (NotSupportedException)
         {
             var validGitProviderNames = string.Join(", ", gitServiceFactory.GetValidGitProviderNames());
-            var message = $"Provided GIT provider name ({gitProviderName}) is not supported. Valid platforms: {validGitProviderNames}.";
-            Logger.LogInformation(message);
-            return (null, BadRequestResponse(message));
+            var message = $"Provided GIT provider name ({gitProviderName}) is not supported.";
+            var details = $"Valid platforms: {validGitProviderNames}.";
+
+            Logger.LogInformation("{Message} {Details}", message, details);
+
+            return (null, BadRequestResponse(message, details));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            var message = $"An unexpected error occurred while creating GitService for {gitProviderName}.";
-            Logger.LogCritical(message);
-            return (null, InternalServerErrorResponse(message));
+            var error = $"An unexpected error occurred while creating GitService for {gitProviderName}.";
+            Logger.LogCritical("{Error} {Details}", error, exception.Message);
+            return (null, InternalServerErrorResponse(error));
         }
     }
 
     #region Responses
 
     protected IActionResult OkResponse(string url)
-        => StatusCode(200, SuccessApiResponse(url));
+        => StatusCode(200, new SuccessApiResponseBody(url));
 
     protected IActionResult CreatedResponse(string url)
-        => StatusCode(201, SuccessApiResponse(url));
+        => StatusCode(201, new SuccessApiResponseBody(url));
 
-    protected IActionResult BadRequestResponse(string message)
-        => StatusCode(500, ErrorApiResponse(message));
+    protected IActionResult BadRequestResponse(string error, string? details = null)
+        => StatusCode(500, new ErrorApiResponseBody(error, details));
 
-    protected IActionResult InternalServerErrorResponse(string message)
-        => StatusCode(500, ErrorApiResponse(message));
+    protected IActionResult InternalServerErrorResponse(string error, string? details = null)
+        => StatusCode(500, new ErrorApiResponseBody(error, details));
 
-    protected IActionResult ServiceUnavailableResponse(string message)
-        => StatusCode(503, ErrorApiResponse(message));
-
-    private static ApiResponseBody SuccessApiResponse(string url)
-        => new() { Success = true, Url = url };
-
-    private static ApiResponseBody ErrorApiResponse(string message)
-        => new() { Success = false, Error = message };
+    protected IActionResult ServiceUnavailableResponse(string error, string? details = null)
+        => StatusCode(503, new ErrorApiResponseBody(error, details));
 
     #endregion
 }
