@@ -12,85 +12,75 @@ namespace GitIssuer.Api.Controllers;
 public class IssueController(IGitServiceFactory gitServiceFactory) : ControllerBase
 {
     [HttpPost("{gitProviderName}/{repositoryOwner}/{repositoryName}/add")]
-    public async Task<IActionResult> AddIssue(string gitProviderName, string repositoryOwner, string repositoryName, [FromBody] AddIssueRequestDto issue)
+    public Task<IActionResult> AddIssue(string gitProviderName, string repositoryOwner, string repositoryName, [FromBody] AddIssueRequestDto issue) 
+        => ExecuteGitServiceActionAsync(gitProviderName,
+            gitService => gitService.AddIssueAsync(repositoryOwner, repositoryName, issue.Title, issue.Description), 
+            CreatedResponse
+        );
+    
+
+    [HttpPut("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/modify")]
+    public Task<IActionResult> ModifyIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId, [FromBody] ModifyIssueRequestDto issue) 
+        => ExecuteGitServiceActionAsync(gitProviderName, 
+            gitService => gitService.ModifyIssueAsync(repositoryOwner, repositoryName, issueId, issue.Title, issue.Description), 
+            OkResponse
+        );
+
+    [HttpPatch("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/close")]
+    public Task<IActionResult> CloseIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId)
+        => ExecuteGitServiceActionAsync(gitProviderName,
+            gitService => gitService.CloseIssueAsync(repositoryOwner, repositoryName, issueId),
+            OkResponse
+        );
+
+    private async Task<IActionResult> ExecuteGitServiceActionAsync(string gitProviderName, Func<IGitService, Task<string>> gitServiceAction, Func<string, IActionResult> createResponseFromResult)
     {
-        IGitService? gitService;
-        try
-        {
-            gitService = gitServiceFactory.GetService(gitProviderName);
-        }
-        catch (NotSupportedException)
-        {
-            var validGitProviderNames = string.Join(", ", gitServiceFactory.GetValidGitProviderNames());
-            return BadRequestResponse($"Provided GIT provider name ({gitProviderName}) is not supported. Valid platforms: {validGitProviderNames}.");
-        }
-        catch (Exception)
-        {
-            return InternalServerErrorResponse($"An unexpected error occurred while creating GitService for gitProviderName {gitProviderName}.");
-        }
-
+        var (gitService, actionResult) = TryGetGitService(gitProviderName);
         if (gitService == null)
-        {
-            return InternalServerErrorResponse($"Failed to create {gitProviderName}Service object.");
-        }
+            return actionResult!;
 
         try
         {
-            var result = await gitService.AddIssueAsync(repositoryOwner, repositoryName, issue.Title, issue.Description);
-            return CreatedResponse(result);
+            var result = await gitServiceAction(gitService);
+            return createResponseFromResult(result);
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException)
         {
-            return ServiceUnavailableResponse($"Failed to create issue. ({exception.Message})");
+            return ServiceUnavailableResponse($"Failed to process issue. ({exception.Message})");
         }
         catch (Exception exception)
         {
-            return InternalServerErrorResponse($"An unexpected error occurred while adding the issue. ({exception.Message})");
+            return InternalServerErrorResponse($"An unexpected error occurred. ({exception.Message})");
         }
     }
 
-    [HttpPatch("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/modify")]
-    public async Task<IActionResult> ModifyIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId, [FromBody] ModifyIssueRequestDto issue)
+    private (IGitService? Service, IActionResult? Result) TryGetGitService(string gitProviderName)
     {
-        IGitService? gitService;
         try
         {
-            gitService = gitServiceFactory.GetService(gitProviderName);
+            var gitService = gitServiceFactory.GetService(gitProviderName);
+            if (gitService == null)
+                return (null, InternalServerErrorResponse($"Failed to create {gitProviderName}Service object."));
+            return (gitService, null);
         }
         catch (NotSupportedException)
         {
             var validGitProviderNames = string.Join(", ", gitServiceFactory.GetValidGitProviderNames());
-            return BadRequestResponse($"Provided GIT provider name ({gitProviderName}) is not supported. Valid platforms: {validGitProviderNames}.");
+            return (null, BadRequestResponse($"Provided GIT provider name ({gitProviderName}) is not supported. Valid platforms: {validGitProviderNames}."));
         }
         catch (Exception)
         {
-            return InternalServerErrorResponse($"An unexpected error occurred while creating GitService for gitProviderName {gitProviderName}.");
-        }
-
-        if (gitService == null)
-        {
-            return InternalServerErrorResponse($"Failed to create {gitProviderName}Service object.");
-        }
-
-        try
-        {
-            var result = await gitService.ModifyIssueAsync(repositoryOwner, repositoryName, issueId, issue.Title, issue.Description);
-            return CreatedResponse(result);
-        }
-        catch (Exception exception) when (exception is HttpRequestException or JsonException)
-        {
-            return ServiceUnavailableResponse($"Failed to create issue. ({exception.Message})");
-        }
-        catch (Exception exception)
-        {
-            return InternalServerErrorResponse($"An unexpected error occurred while adding the issue. ({exception.Message})");
+            return (null, InternalServerErrorResponse($"An unexpected error occurred while creating GitService for {gitProviderName}."));
         }
     }
 
     #region Responses
 
-    protected IActionResult CreatedResponse(string message)
+    protected IActionResult OkResponse(string message)
         => StatusCode(200, new ApiResponseBody { Success = true, Url = message });
+
+    protected IActionResult CreatedResponse(string message)
+        => StatusCode(201, new ApiResponseBody { Success = true, Url = message });
 
     protected IActionResult BadRequestResponse(string message)
         => StatusCode(500, ErrorApiResponse(message));

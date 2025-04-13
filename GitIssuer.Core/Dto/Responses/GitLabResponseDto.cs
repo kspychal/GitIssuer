@@ -2,7 +2,7 @@
 
 namespace GitIssuer.Core.Dto.Responses;
 
-public record GitLabAddIssueResponseDto
+public record GitLabResponseDto
 {
     [JsonPropertyName("web_url")]
     public string? WebUrl { get; set; }

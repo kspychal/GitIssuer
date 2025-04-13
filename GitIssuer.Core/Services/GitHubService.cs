@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 
 namespace GitIssuer.Core.Services;
 
-public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBase<GitHubAddIssueResponseDto>(httpClientFactory)
+public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBase<GitHubResponseDto>(httpClientFactory)
 {
     public override string PersonalAccessToken => "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";
     public override string ApiUrl => "https://api.github.com/";
@@ -24,6 +24,12 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
             body = description
         };
 
+    public override object CreateCloseIssueRequestBody()
+        => new
+        {
+            state = "closed"
+        };
+
     public override void AddCustomRequestHeaders(HttpClient httpClient)
     {
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
@@ -37,6 +43,6 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
     public override string GetIssuesUrl(string repositoryOwner, string repositoryName)
         => $"repos/{repositoryOwner}/{repositoryName}/issues";
 
-    protected override string ExtractUrl(GitHubAddIssueResponseDto response)
+    protected override string ExtractUrl(GitHubResponseDto response)
         => response.HtmlUrl!;
 }

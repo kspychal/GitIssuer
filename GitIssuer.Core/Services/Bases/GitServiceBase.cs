@@ -26,6 +26,14 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
     }
 
+    public async Task<string> CloseIssueAsync(string repositoryOwner, string repositoryName, int issueId)
+    {
+        var requestBody = CreateCloseIssueRequestBody();
+        var issueUrl = $"{GetIssuesUrl(repositoryOwner, repositoryName)}/{issueId}";
+        var httpMethod = GetModifyIssueHttpMethod();
+        return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
+    }
+
     private async Task<string> SendIssueRequestAsync(string url, object requestBody, HttpMethod method)
     {
         var httpClient = httpClientFactory.CreateClient();
@@ -73,7 +81,8 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
 
     public abstract object CreateAddIssueRequestBody(string name, string description);
     public abstract object CreateModifyIssueRequestBody(string? name, string? description);
-    
+    public abstract object CreateCloseIssueRequestBody();
+
     public abstract void AddCustomRequestHeaders(HttpClient httpClient);
 
     public abstract HttpMethod GetModifyIssueHttpMethod();

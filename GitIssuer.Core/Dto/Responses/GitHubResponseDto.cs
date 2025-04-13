@@ -2,7 +2,7 @@
 
 namespace GitIssuer.Core.Dto.Responses;
 
-public record GitHubAddIssueResponseDto
+public record GitHubResponseDto
 {
     [JsonPropertyName("html_url")]
     public string? HtmlUrl { get; set; }
