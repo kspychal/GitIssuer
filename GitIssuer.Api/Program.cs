@@ -30,12 +30,12 @@ public class Program
             builder.Services.AddScoped<IGitServiceFactory, GitServiceFactory>();
             builder.Services.AddHttpClient();
 
-            builder.Services.Configure<GitTokensOptions>(
+            builder.Services.Configure<GitTokensConfiguration>(
                 builder.Configuration.GetSection("GitTokens"));
 
             builder.Services.AddScoped(serviceProvider =>
             {
-                var tokens = serviceProvider.GetRequiredService<IOptions<GitTokensOptions>>().Value;
+                var tokens = serviceProvider.GetRequiredService<IOptions<GitTokensConfiguration>>().Value;
                 var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
                 if (string.IsNullOrWhiteSpace(tokens.GitHubToken))
@@ -46,7 +46,7 @@ public class Program
 
             builder.Services.AddScoped(serviceProvider =>
             {
-                var tokens = serviceProvider.GetRequiredService<IOptions<GitTokensOptions>>().Value;
+                var tokens = serviceProvider.GetRequiredService<IOptions<GitTokensConfiguration>>().Value;
                 var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
                 if (string.IsNullOrWhiteSpace(tokens.GitLabToken))
