@@ -3,9 +3,9 @@ using GitIssuer.Core.Services.Bases;
 
 namespace GitIssuer.Core.Services;
 
-public class GitLabService(IHttpClientFactory httpClientFactory, string personalAccessToken) : GitServiceBase<GitLabResponseDto>(httpClientFactory, personalAccessToken)
+public class GitLabService(IHttpClientFactory httpClientFactory, string personalAccessToken) : GitServiceBase<GitLabIssueResponseDto>(httpClientFactory, personalAccessToken)
 {
-    protected override string ApiUrl => "https://gitlab.com/api/v4/";
+    protected override string ApiBaseUrl => "https://gitlab.com/api/v4/";
     protected override string ProviderName => "GitLab";
 
     /// <inheritdoc/>
@@ -39,10 +39,6 @@ public class GitLabService(IHttpClientFactory httpClientFactory, string personal
         => HttpMethod.Put;
 
     /// <inheritdoc/>
-    protected override string GetBaseIssuesUrl(string repositoryOwner, string repositoryName) 
+    protected override string BuildIssuesApiUrl(string repositoryOwner, string repositoryName) 
         => $"projects/{Uri.EscapeDataString($"{repositoryOwner}/{repositoryName}")}/issues";
-
-    /// <inheritdoc/>
-    protected override string ExtractUrl(GitLabResponseDto response)
-        => response.WebUrl!;
 }

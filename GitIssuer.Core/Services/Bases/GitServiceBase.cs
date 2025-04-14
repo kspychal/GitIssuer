@@ -1,22 +1,25 @@
-﻿using GitIssuer.Core.Exceptions;
+﻿using GitIssuer.Core.Dto.Responses.Interfaces;
+using GitIssuer.Core.Exceptions;
 using GitIssuer.Core.Services.Bases.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
 namespace GitIssuer.Core.Services.Bases;
 
-public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFactory, string personalAccessToken) : IGitService
+public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFactory, string personalAccessToken) : IGitService 
+    where TResponse : IIssueResponse
 {
     protected string PersonalAccessToken => personalAccessToken;
-    protected abstract string ApiUrl { get; }
+    protected abstract string ApiBaseUrl { get; }
     protected abstract string ProviderName { get; }
 
     /// <inheritdoc/>
     public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string issueName, string issueDescription)
     {
         var requestBody = CreateAddIssueRequestBody(issueName, issueDescription);
-        var issuesUrl = GetBaseIssuesUrl(repositoryOwner, repositoryName);
+        var issuesUrl = BuildIssuesApiUrl(repositoryOwner, repositoryName);
         return await SendIssueRequestAsync(issuesUrl, requestBody, HttpMethod.Post);
     }
 
@@ -24,8 +27,8 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     public async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? issueName, string? issueDescription)
     {
         var requestBody = CreateModifyIssueRequestBody(issueName, issueDescription);
-        var baseIssuesUrl = GetBaseIssuesUrl(repositoryOwner, repositoryName);
-        var issueUrl = $"{baseIssuesUrl}/{issueId}";
+        var issuesUrl = BuildIssuesApiUrl(repositoryOwner, repositoryName);
+        var issueUrl = $"{issuesUrl}/{issueId}";
         var httpMethod = GetModifyIssueHttpMethod(); 
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
     }
@@ -34,7 +37,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     public async Task<string> CloseIssueAsync(string repositoryOwner, string repositoryName, int issueId)
     {
         var requestBody = CreateCloseIssueRequestBody();
-        var baseIssuesUrl = GetBaseIssuesUrl(repositoryOwner, repositoryName);
+        var baseIssuesUrl = BuildIssuesApiUrl(repositoryOwner, repositoryName);
         var issueUrl = $"{baseIssuesUrl}/{issueId}";
         var httpMethod = GetModifyIssueHttpMethod();
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
@@ -43,40 +46,69 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     /// <summary>
     /// Sends the HTTP request to interact with the issue (create, modify, or close).
     /// </summary>
-    /// <param name="url">The URL for the issue endpoint.</param>
+    /// <param name="endpoint">The relative URL for the issue API endpoint (e.g., "owner/repo/issues").</param>
     /// <param name="requestBody">The body of the request, containing the issue details.</param>
     /// <param name="method">The HTTP method (POST, PUT, or PATCH) to use for the request.</param>
     /// <returns>A task that represents the asynchronous operation, containing the URL of the affected issue.</returns>
     /// <exception cref="GitException">Thrown when the response is not successful.</exception>
-    protected virtual async Task<string> SendIssueRequestAsync(string url, object requestBody, HttpMethod method)
+    protected virtual async Task<string> SendIssueRequestAsync(string endpoint, object requestBody, HttpMethod method)
     {
         var httpClient = httpClientFactory.CreateClient();
-        httpClient.BaseAddress = new Uri(ApiUrl);
+        httpClient.BaseAddress = new Uri(ApiBaseUrl);
 
-        var jsonRequestBody = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json");
+        var content = CreateJsonStringContent(requestBody);
 
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", PersonalAccessToken);
         AddCustomRequestHeaders(httpClient);
 
         var response = method.Method switch
         {
-            "POST" => await httpClient.PostAsync(url, content),
-            "PATCH" => await httpClient.PatchAsync(url, content),
-            "PUT" => await httpClient.PutAsync(url, content),
+            "POST" => await PostAsync(httpClient, endpoint, content),
+            "PATCH" => await PatchAsync(httpClient, endpoint, content),
+            "PUT" => await PutAsync(httpClient, endpoint, content),
             _ => throw new ArgumentException("Invalid HttpMethod. Only Post, Patch, and Put are supported.")
         };
 
         if (response.IsSuccessStatusCode)
         {
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var responseData = JsonSerializer.Deserialize<TResponse>(responseContent);
-            return ExtractUrl(responseData!);
+            var responseData = await DeserializeResponseAsync(response);
+            return GetIssueUrlFromResponse(responseData);
         }
 
         var errorContent = await response.Content.ReadAsStringAsync();
         throw new GitException($"{ProviderName} API responded with a non-success status code.", errorContent);
     }
+
+    /// <summary>
+    /// Creates a StringContent object containing the JSON representation of the provided request body,
+    /// with UTF-8 encoding and "application/json" content type.
+    /// </summary>
+    protected virtual StringContent CreateJsonStringContent(object requestBody)
+    {
+        var jsonRequestBody = JsonSerializer.Serialize(requestBody);
+        return new StringContent(jsonRequestBody, Encoding.UTF8, "application/json");
+    }
+
+    /// <summary>
+    /// Asynchronously reads the content of an HTTP response message as a string and
+    /// deserializes it into an object of the specified type <typeparamref name="TResponse"/>.
+    /// </summary>
+    /// <typeparam name="TResponse">The type to deserialize the response content into.</typeparam>
+    /// <param name="response">The HTTP response message to deserialize.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the deserialized object of type <typeparamref name="TResponse"/>.</returns>
+    protected virtual async Task<TResponse> DeserializeResponseAsync(HttpResponseMessage response)
+    {
+        var responseContent = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<TResponse>(responseContent)!;
+    }
+
+    /// <summary>
+    /// Extracts the issue URL from the specific Git API response.
+    /// </summary>
+    /// <param name="response">The deserialized response.</param>
+    /// <returns>The HTML URL of the affected issue.</returns>
+    protected virtual string GetIssueUrlFromResponse(TResponse response)
+        => response.IssueUrl!;
 
     /// <summary>
     /// Creates the request body for adding a new issue on the Git platform.
@@ -117,12 +149,26 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     /// <param name="repositoryOwner">The owner of the repository.</param>
     /// <param name="repositoryName">The name of the repository.</param>
     /// <returns>The relative URL to the issues endpoint.</returns>
-    protected abstract string GetBaseIssuesUrl(string repositoryOwner, string repositoryName);
+    protected abstract string BuildIssuesApiUrl(string repositoryOwner, string repositoryName);
 
     /// <summary>
-    /// Extracts the issue URL from the specific Git API response.
+    /// Created only for mocking purposes.
     /// </summary>
-    /// <param name="response">The deserialized response.</param>
-    /// <returns>The HTML URL of the affected issue.</returns>
-    protected abstract string ExtractUrl(TResponse response);
+    [ExcludeFromCodeCoverage]
+    protected virtual Task<HttpResponseMessage> PostAsync(HttpClient httpClient, string endpoint, StringContent content)
+        => httpClient.PostAsync(endpoint, content);
+
+    /// <summary>
+    /// Created only for mocking purposes.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    protected virtual Task<HttpResponseMessage> PatchAsync(HttpClient httpClient, string endpoint, StringContent content)
+        => httpClient.PatchAsync(endpoint, content);
+
+    /// <summary>
+    /// Created only for mocking purposes.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    protected virtual Task<HttpResponseMessage> PutAsync(HttpClient httpClient, string endpoint, StringContent content)
+        => httpClient.PutAsync(endpoint, content);
 }

@@ -1,6 +1,8 @@
-﻿namespace GitIssuer.Core.Tests.FakeObjects;
+﻿using GitIssuer.Core.Dto.Responses.Interfaces;
 
-public record FakeResponseDto
+namespace GitIssuer.Core.Tests.FakeObjects;
+
+public record FakeResponseDto : IIssueResponse
 {
-    public string? SomeUrl { get; set; }
+    public string? IssueUrl { get; set; }
 }

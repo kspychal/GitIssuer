@@ -4,9 +4,9 @@ using System.Net.Http.Headers;
 
 namespace GitIssuer.Core.Services;
 
-public class GitHubService(IHttpClientFactory httpClientFactory, string personalAccessToken) : GitServiceBase<GitHubResponseDto>(httpClientFactory, personalAccessToken)
+public class GitHubService(IHttpClientFactory httpClientFactory, string personalAccessToken) : GitServiceBase<GitHubIssueResponseDto>(httpClientFactory, personalAccessToken)
 {
-    protected override string ApiUrl => "https://api.github.com/";
+    protected override string ApiBaseUrl => "https://api.github.com/";
     protected override string ProviderName => "GitHub";
 
     /// <inheritdoc/>
@@ -45,10 +45,6 @@ public class GitHubService(IHttpClientFactory httpClientFactory, string personal
         => HttpMethod.Patch;
 
     /// <inheritdoc/>
-    protected override string GetBaseIssuesUrl(string repositoryOwner, string repositoryName)
+    protected override string BuildIssuesApiUrl(string repositoryOwner, string repositoryName)
         => $"repos/{repositoryOwner}/{repositoryName}/issues";
-
-    /// <inheritdoc/>
-    protected override string ExtractUrl(GitHubResponseDto response)
-        => response.HtmlUrl!;
 }
