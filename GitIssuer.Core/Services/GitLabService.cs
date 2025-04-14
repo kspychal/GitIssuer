@@ -40,7 +40,7 @@ public class GitLabService(IHttpClientFactory httpClientFactory) : GitServiceBas
         => HttpMethod.Put;
 
     /// <inheritdoc/>
-    protected override string GetIssuesUrl(string repositoryOwner, string repositoryName) 
+    protected override string GetBaseIssuesUrl(string repositoryOwner, string repositoryName) 
         => $"projects/{Uri.EscapeDataString($"{repositoryOwner}/{repositoryName}")}/issues";
 
     /// <inheritdoc/>

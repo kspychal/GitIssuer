@@ -16,7 +16,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string issueName, string issueDescription)
     {
         var requestBody = CreateAddIssueRequestBody(issueName, issueDescription);
-        var issuesUrl = GetIssuesUrl(repositoryOwner, repositoryName);
+        var issuesUrl = GetBaseIssuesUrl(repositoryOwner, repositoryName);
         return await SendIssueRequestAsync(issuesUrl, requestBody, HttpMethod.Post);
     }
 
@@ -24,7 +24,8 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     public async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? issueName, string? issueDescription)
     {
         var requestBody = CreateModifyIssueRequestBody(issueName, issueDescription);
-        var issueUrl = $"{GetIssuesUrl(repositoryOwner, repositoryName)}/{issueId}";
+        var baseIssuesUrl = GetBaseIssuesUrl(repositoryOwner, repositoryName);
+        var issueUrl = $"{baseIssuesUrl}/{issueId}";
         var httpMethod = GetModifyIssueHttpMethod(); 
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
     }
@@ -33,7 +34,8 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     public async Task<string> CloseIssueAsync(string repositoryOwner, string repositoryName, int issueId)
     {
         var requestBody = CreateCloseIssueRequestBody();
-        var issueUrl = $"{GetIssuesUrl(repositoryOwner, repositoryName)}/{issueId}";
+        var baseIssuesUrl = GetBaseIssuesUrl(repositoryOwner, repositoryName);
+        var issueUrl = $"{baseIssuesUrl}/{issueId}";
         var httpMethod = GetModifyIssueHttpMethod();
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
     }
@@ -115,7 +117,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     /// <param name="repositoryOwner">The owner of the repository.</param>
     /// <param name="repositoryName">The name of the repository.</param>
     /// <returns>The relative URL to the issues endpoint.</returns>
-    protected abstract string GetIssuesUrl(string repositoryOwner, string repositoryName);
+    protected abstract string GetBaseIssuesUrl(string repositoryOwner, string repositoryName);
 
     /// <summary>
     /// Extracts the issue URL from the specific Git API response.

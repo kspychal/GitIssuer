@@ -46,7 +46,7 @@ public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBas
         => HttpMethod.Patch;
 
     /// <inheritdoc/>
-    protected override string GetIssuesUrl(string repositoryOwner, string repositoryName)
+    protected override string GetBaseIssuesUrl(string repositoryOwner, string repositoryName)
         => $"repos/{repositoryOwner}/{repositoryName}/issues";
 
     /// <inheritdoc/>
