@@ -1,14 +1,14 @@
-﻿using GitIssuer.Core.Services.Bases.Interfaces;
+﻿using GitIssuer.Core.Exceptions;
+using GitIssuer.Core.Services.Bases.Interfaces;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GitIssuer.Core.Exceptions;
 
 namespace GitIssuer.Core.Services.Bases;
 
-public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFactory) : IGitService
+public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFactory, string personalAccessToken) : IGitService
 {
-    protected abstract string PersonalAccessToken { get; }
+    protected string PersonalAccessToken => personalAccessToken;
     protected abstract string ApiUrl { get; }
     protected abstract string ProviderName { get; }
 

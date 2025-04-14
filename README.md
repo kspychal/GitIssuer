@@ -10,6 +10,42 @@ GitIssuer is a RESTful API that allows you to add, modify, and close issues in r
 
 ---
 
+## Configuration
+
+GitIssuer requires personal access tokens to authenticate with Git providers (e.g., GitHub, GitLab). You can configure these tokens using either **UserSecrets** (for local development) or a **Docker `.env` file**.
+
+### UserSecrets (Local Development)
+
+Use [UserSecrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) to store your tokens securely during local development.
+
+**File path:**  
+`C:\Users\user\AppData\Roaming\Microsoft\UserSecrets\<guid>\secrets.json`
+
+**Example content:**
+```json
+{
+  "GitTokens": {
+    "GitHubToken": "githubtoken",
+    "GitLabToken": "gitlabtoken"
+  }
+}
+```
+
+### Docker `.env` File
+
+For Docker deployments, GitIssuer can be configured using a `.env` file to store your Git tokens securely.
+
+**File path:**  
+`C:\Users\user\.config\GitIssuer\gitissuer-api.env`
+
+**Example content:**
+```env
+GitTokens__GitHubToken=githubtoken
+GitTokens__GitLabToken=gitlabtoken
+```
+
+---
+
 ## Endpoints
 
 ### Add Issue

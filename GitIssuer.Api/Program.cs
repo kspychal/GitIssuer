@@ -1,6 +1,8 @@
+using GitIssuer.Core.Configuration;
 using GitIssuer.Core.Factories;
 using GitIssuer.Core.Factories.Interfaces;
 using GitIssuer.Core.Services;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace GitIssuer.Api;
@@ -26,17 +28,37 @@ public class Program
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<IGitServiceFactory, GitServiceFactory>();
-            builder.Services.AddScoped<GitHubService>();
-            builder.Services.AddScoped<GitLabService>();
             builder.Services.AddHttpClient();
+
+            builder.Services.Configure<GitTokensOptions>(
+                builder.Configuration.GetSection("GitTokens"));
+
+            builder.Services.AddScoped(serviceProvider =>
+            {
+                var tokens = serviceProvider.GetRequiredService<IOptions<GitTokensOptions>>().Value;
+                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+
+                if (string.IsNullOrWhiteSpace(tokens.GitHubToken))
+                    throw new InvalidOperationException("GitHub token is missing.");
+
+                return new GitHubService(httpClientFactory, tokens.GitHubToken);
+            });
+
+            builder.Services.AddScoped(serviceProvider =>
+            {
+                var tokens = serviceProvider.GetRequiredService<IOptions<GitTokensOptions>>().Value;
+                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+
+                if (string.IsNullOrWhiteSpace(tokens.GitLabToken))
+                    throw new InvalidOperationException("GitLab token is missing.");
+
+                return new GitLabService(httpClientFactory, tokens.GitHubToken);
+            });
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 

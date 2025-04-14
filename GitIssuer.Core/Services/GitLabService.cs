@@ -3,9 +3,8 @@ using GitIssuer.Core.Services.Bases;
 
 namespace GitIssuer.Core.Services;
 
-public class GitLabService(IHttpClientFactory httpClientFactory) : GitServiceBase<GitLabResponseDto>(httpClientFactory)
+public class GitLabService(IHttpClientFactory httpClientFactory, string personalAccessToken) : GitServiceBase<GitLabResponseDto>(httpClientFactory, personalAccessToken)
 {
-    protected override string PersonalAccessToken => "glpat-KGKv13Qz5juRXGf6vyos";
     protected override string ApiUrl => "https://gitlab.com/api/v4/";
     protected override string ProviderName => "GitLab";
 

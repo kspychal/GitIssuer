@@ -4,9 +4,8 @@ using System.Net.Http.Headers;
 
 namespace GitIssuer.Core.Services;
 
-public class GitHubService(IHttpClientFactory httpClientFactory) : GitServiceBase<GitHubResponseDto>(httpClientFactory)
+public class GitHubService(IHttpClientFactory httpClientFactory, string personalAccessToken) : GitServiceBase<GitHubResponseDto>(httpClientFactory, personalAccessToken)
 {
-    protected override string PersonalAccessToken => "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";
     protected override string ApiUrl => "https://api.github.com/";
     protected override string ProviderName => "GitHub";
 
