@@ -41,6 +41,16 @@ Adds a new issue to the specified repository.
 - `201 Created` on success  
 - `400/500/503` on error with details
 
+##### Example Success Response
+
+```json
+{
+  "url": "https://github.com/username/repository/issues/123"
+}
+```
+
+This response indicates that the issue has been successfully created. The `url` provides a direct link to the issue.
+
 ---
 
 ### Modify Issue
@@ -73,6 +83,16 @@ Modifies an existing issue.
 - `200 OK` on success  
 - `400/500/503` on error with details
 
+##### Example Success Response
+
+```json
+{
+  "url": "https://github.com/username/repository/issues/123"
+}
+```
+
+This response indicates that the issue has been successfully modified. The `url` provides a direct link to the updated issue.
+
 ---
 
 ### Close Issue
@@ -94,6 +114,14 @@ Closes an existing issue.
 
 - `200 OK` on success  
 - `400/500/503` on error with details
+
+```json
+{
+  "url": "https://github.com/username/repository/issues/123"
+}
+```
+
+This response indicates that the issue has been successfully closed. The `url` provides a direct link to the closed issue.
 
 ---
 
