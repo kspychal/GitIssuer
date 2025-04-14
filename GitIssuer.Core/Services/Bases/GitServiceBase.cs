@@ -13,17 +13,17 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     protected abstract string ProviderName { get; }
 
     /// <inheritdoc/>
-    public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string name, string description)
+    public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string issueName, string issueDescription)
     {
-        var requestBody = CreateAddIssueRequestBody(name, description);
+        var requestBody = CreateAddIssueRequestBody(issueName, issueDescription);
         var issuesUrl = GetIssuesUrl(repositoryOwner, repositoryName);
         return await SendIssueRequestAsync(issuesUrl, requestBody, HttpMethod.Post);
     }
 
     /// <inheritdoc/>
-    public async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? name, string? description)
+    public async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? issueName, string? issueDescription)
     {
-        var requestBody = CreateModifyIssueRequestBody(name, description);
+        var requestBody = CreateModifyIssueRequestBody(issueName, issueDescription);
         var issueUrl = $"{GetIssuesUrl(repositoryOwner, repositoryName)}/{issueId}";
         var httpMethod = GetModifyIssueHttpMethod(); 
         return await SendIssueRequestAsync(issueUrl, requestBody, httpMethod);
@@ -46,7 +46,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     /// <param name="method">The HTTP method (POST, PUT, or PATCH) to use for the request.</param>
     /// <returns>A task that represents the asynchronous operation, containing the URL of the affected issue.</returns>
     /// <exception cref="GitException">Thrown when the response is not successful.</exception>
-    private async Task<string> SendIssueRequestAsync(string url, object requestBody, HttpMethod method)
+    protected virtual async Task<string> SendIssueRequestAsync(string url, object requestBody, HttpMethod method)
     {
         var httpClient = httpClientFactory.CreateClient();
         httpClient.BaseAddress = new Uri(ApiUrl);
