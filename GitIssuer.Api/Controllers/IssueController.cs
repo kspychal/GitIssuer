@@ -21,7 +21,7 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
     /// <param name="repositoryName">The name of the repository.</param>
     /// <param name="issue">The issue data including title and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
-    [HttpPost("{gitProviderName}/{repositoryOwner}/{repositoryName}/add")]
+    [HttpPost("{gitProviderName:regex(^[[^\\s]]+$)}/{repositoryOwner:regex(^[[^\\s]]+$)}/{repositoryName:regex(^[[^\\s]]+$)}/add")]
     public Task<IActionResult> AddIssue(string gitProviderName, string repositoryOwner, string repositoryName, [FromBody] AddIssueRequestDto issue) 
         => ExecuteGitServiceActionAsync(gitProviderName,
             gitService => gitService.AddIssueAsync(repositoryOwner, repositoryName, issue.Title, issue.Description), 
@@ -36,7 +36,7 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
     /// <param name="issueId">The ID of the issue to be modified.</param>
     /// <param name="issue">The updated issue data including title and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
-    [HttpPut("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/modify")]
+    [HttpPut("{gitProviderName:regex(^[[^\\s]]+$)}/{repositoryOwner:regex(^[[^\\s]]+$)}/{repositoryName:regex(^[[^\\s]]+$)}/{issueId}/modify")]
     public Task<IActionResult> ModifyIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId, [FromBody] ModifyIssueRequestDto issue) 
         => ExecuteGitServiceActionAsync(gitProviderName, 
             gitService => gitService.ModifyIssueAsync(repositoryOwner, repositoryName, issueId, issue.Title, issue.Description), 
@@ -50,7 +50,7 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
     /// <param name="repositoryName">The name of the repository.</param>
     /// <param name="issueId">The ID of the issue to be closed.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
-    [HttpPatch("{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/close")]
+    [HttpPatch("{gitProviderName:regex(^[[^\\s]]+$)}/{repositoryOwner:regex(^[[^\\s]]+$)}/{repositoryName:regex(^[[^\\s]]+$)}/{issueId}/close")]
     public Task<IActionResult> CloseIssue(string gitProviderName, string repositoryOwner, string repositoryName, int issueId)
         => ExecuteGitServiceActionAsync(gitProviderName,
             gitService => gitService.CloseIssueAsync(repositoryOwner, repositoryName, issueId),
