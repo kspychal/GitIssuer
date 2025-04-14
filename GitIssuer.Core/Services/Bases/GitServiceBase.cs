@@ -16,7 +16,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     protected abstract string ProviderName { get; }
 
     /// <inheritdoc/>
-    public async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string issueName, string issueDescription)
+    public virtual async Task<string> AddIssueAsync(string repositoryOwner, string repositoryName, string issueName, string issueDescription)
     {
         var requestBody = CreateAddIssueRequestBody(issueName, issueDescription);
         var issuesUrl = BuildIssuesApiUrl(repositoryOwner, repositoryName);
@@ -24,7 +24,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     }
 
     /// <inheritdoc/>
-    public async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? issueName, string? issueDescription)
+    public virtual async Task<string> ModifyIssueAsync(string repositoryOwner, string repositoryName, int issueId, string? issueName, string? issueDescription)
     {
         var requestBody = CreateModifyIssueRequestBody(issueName, issueDescription);
         var issuesUrl = BuildIssuesApiUrl(repositoryOwner, repositoryName);
@@ -34,7 +34,7 @@ public abstract class GitServiceBase<TResponse>(IHttpClientFactory httpClientFac
     }
 
     /// <inheritdoc/>
-    public async Task<string> CloseIssueAsync(string repositoryOwner, string repositoryName, int issueId)
+    public virtual async Task<string> CloseIssueAsync(string repositoryOwner, string repositoryName, int issueId)
     {
         var requestBody = CreateCloseIssueRequestBody();
         var baseIssuesUrl = BuildIssuesApiUrl(repositoryOwner, repositoryName);

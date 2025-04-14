@@ -63,7 +63,7 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
     /// <param name="gitServiceAction">The method that executes the Git service action.</param>
     /// <param name="createSuccessResponseAction">A method to generate a success response.</param>
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
-    private async Task<IActionResult> ExecuteGitServiceActionAsync(string gitProviderName, Func<IGitService, Task<string>> gitServiceAction, Func<string, IActionResult> createSuccessResponseAction)
+    protected virtual async Task<IActionResult> ExecuteGitServiceActionAsync(string gitProviderName, Func<IGitService, Task<string>> gitServiceAction, Func<string, IActionResult> createSuccessResponseAction)
     {
         var (gitService, actionResult) = TryGetGitService(gitProviderName);
         if (gitService == null)
@@ -95,7 +95,7 @@ public class IssueController(IGitServiceFactory gitServiceFactory, ILogger<Issue
     /// </summary>
     /// <param name="gitProviderName">The name of the Git provider.</param>
     /// <returns>A tuple containing either the <see cref="IGitService"/> instance or an <see cref="IActionResult"/> in case of failure.</returns>
-    private (IGitService? Service, IActionResult? Result) TryGetGitService(string gitProviderName)
+    protected virtual (IGitService? Service, IActionResult? Result) TryGetGitService(string gitProviderName)
     {
         try
         {
