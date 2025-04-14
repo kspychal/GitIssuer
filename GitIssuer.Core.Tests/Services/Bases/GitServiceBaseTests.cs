@@ -16,9 +16,8 @@ public class GitServiceBaseTests
     public void ConstructorTest()
     {
         const string expectedPersonalAccessToken = "SomePat";
-        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
 
-        var testedServiceBaseMock = new Mock<GitServiceBase<FakeResponseDto>>(httpClientFactoryMock.Object, expectedPersonalAccessToken)
+        var testedServiceBaseMock = new Mock<GitServiceBase<FakeResponseDto>>(new Mock<IHttpClientFactory>().Object, expectedPersonalAccessToken)
         {
             CallBase = true
         };
