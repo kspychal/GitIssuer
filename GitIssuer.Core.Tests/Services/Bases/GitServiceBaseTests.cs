@@ -8,7 +8,7 @@ using System.Reflection;
 using IHttpClientFactory = System.Net.Http.IHttpClientFactory;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace GitIssuer.Core.Tests.Factories.Bases;
+namespace GitIssuer.Core.Tests.Services.Bases;
 
 public class GitServiceBaseTests
 {
