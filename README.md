@@ -8,8 +8,6 @@ GitIssuer is a RESTful API that allows you to add, modify, and close issues in r
 - Modify an existing issue
 - Close an existing issue
 
----
-
 ## Configuration
 
 GitIssuer requires personal access tokens to authenticate with Git providers (e.g., GitHub, GitLab). You can configure these tokens using either **UserSecrets** (for local development) or a **Docker `.env` file**.
@@ -43,8 +41,6 @@ For Docker deployments, GitIssuer can be configured using a `.env` file to store
 GitTokens__GitHubToken=githubtoken
 GitTokens__GitLabToken=gitlabtoken
 ```
-
----
 
 ## Endpoints
 
@@ -87,7 +83,6 @@ Adds a new issue to the specified repository.
 
 This response indicates that the issue has been successfully created. The `url` provides a direct link to the issue.
 
----
 
 ### Modify Issue
 
@@ -129,8 +124,6 @@ Modifies an existing issue.
 
 This response indicates that the issue has been successfully modified. The `url` provides a direct link to the updated issue.
 
----
-
 ### Close Issue
 
 **PATCH** `/api/issue/{gitProviderName}/{repositoryOwner}/{repositoryName}/{issueId}/close`
@@ -158,8 +151,6 @@ Closes an existing issue.
 ```
 
 This response indicates that the issue has been successfully closed. The `url` provides a direct link to the closed issue.
-
----
 
 ## Error Handling
 
