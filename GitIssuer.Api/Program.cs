@@ -52,7 +52,7 @@ public class Program
                 if (string.IsNullOrWhiteSpace(tokens.GitLabToken))
                     throw new InvalidOperationException("GitLab token is missing.");
 
-                return new GitLabService(httpClientFactory, tokens.GitHubToken);
+                return new GitLabService(httpClientFactory, tokens.GitLabToken);
             });
 
             var app = builder.Build();
